@@ -1,5 +1,6 @@
 const router = require("express").Router();
 const Post = require("../models").post;
+const Comment = require("../models").comments;
 const LikePost = require("../models").postLike;
 const postValidation = require("../validation").postValidation;
 
@@ -46,6 +47,7 @@ router.post("/", async (req, res) => {
   }
 
   let { title, description } = req.body;
+
   try {
     let newPost = new Post({
       title,
@@ -106,7 +108,7 @@ router.delete("/:_id", async (req, res) => {
 router.post("/like", async (req, res) => {
   try {
     const { userId, postId } = req.body;
-    // console.log(userId, postId);
+    console.log(userId, postId);
 
     const post = await Post.findById(postId);
     console.log(post);
@@ -133,6 +135,29 @@ router.post("/like", async (req, res) => {
   } catch (err) {
     console.log(err);
     return res.status(500).send(err);
+  }
+});
+
+router.post("/comment", async (req, res) => {
+  const { commentText, postId } = req.body;
+  const post = await Post.findById(postId);
+  console.log(post);
+  if (!post) {
+    return res.status(404).send("Post not found.");
+  }
+  try {
+    let newComment = new Comment({
+      postId,
+      userId: req.user._id,
+      commentText,
+    });
+    let savedComment = await newComment.save();
+    return res.send({
+      msg: "new post has been saved",
+      savedComment,
+    });
+  } catch (e) {
+    return res.status(500).send("can't creat a comment");
   }
 });
 
