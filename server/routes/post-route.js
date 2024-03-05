@@ -161,4 +161,36 @@ router.post("/comment", async (req, res) => {
   }
 });
 
+router.post("/comment/like", async (req, res) => {
+  try {
+    const { userId, commentId } = req.body;
+    console.log(userId, commentId);
+
+    const post = await Comment.findById(commentId);
+    console.log(post);
+    if (!post) {
+      return res.status(404).send("Comment not found.");
+    }
+    const alreadyLikedIndex = post.likesUser.indexOf(userId);
+    console.log(alreadyLikedIndex);
+    if (alreadyLikedIndex !== -1) {
+      // If user has already liked, remove the like
+      post.likesUser.splice(alreadyLikedIndex, 1);
+      post.likes -= 1;
+      await post.save();
+      return res
+        .status(200)
+        .send({ msg: "Comment unliked successfully.", post });
+    }
+    post.likesUser.push(userId);
+    post.likes += 1;
+    await post.save();
+
+    return res.status(200).send({ msg: "Comment liked successfully!", post });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).send(err);
+  }
+});
+
 module.exports = router;
